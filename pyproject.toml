@@ -1,0 +1,10 @@
+[project]
+name = "bangumi-tv"
+version = "0.1.0"
+description = "For Bangumi TV API MCP Service"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp[cli]>=1.6.0",
+    "requests>=2.32.3",
+]
