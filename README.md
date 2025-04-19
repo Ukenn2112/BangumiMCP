@@ -2,6 +2,10 @@
 
 这是一个MCP（机器通信协议）服务，提供对 BangumiTV API 的访问。它允许您与 BangumiTV 的数据进行交互，并检索有关动漫、漫画、音乐、游戏等的信息。
 
+## 示例
+
+![output](https://github.com/user-attachments/assets/9ea4b0c1-6208-4997-a1c5-62a0c6454be8)
+
 ## 功能
 
 - 条目
