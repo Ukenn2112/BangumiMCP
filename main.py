@@ -366,30 +366,12 @@ async def get_daily_broadcast() -> str:
         if not items:
             formatted_schedule.append("  No broadcasts scheduled.")
         else:
-            for item in items:
-                # Format each subject airing on this day
-                subject_id = item.get("id")
-                name = item.get("name")
-                name_cn = item.get("name_cn")
-                subject_type_int = item.get("type")
-
-                subject_name = name_cn or name or f"Subject {subject_id}"
-
-                try:
-                    subject_type_str = (
-                        SubjectType(subject_type_int).name
-                        if subject_type_int is not None
-                        else "Unknown Type"
-                    )
-                except ValueError:
-                    subject_type_str = f"Unknown Type ({subject_type_int})"
-
-                # You could add more details here like airdate if desired, but it's often the same for the day
-                # airdate = item.get('air_date')
-
-                formatted_schedule.append(
-                    f"- [{subject_type_str}] {subject_name} (ID: {subject_id})"
-                )
+            formatted_results = [format_subject_summary(s) for s in items]
+            results_text = (
+                f"Found {len(items)} subjects.\n"
+                + "---\n".join(formatted_results)
+            )
+            formatted_schedule.append(results_text)
 
     return "\n".join(formatted_schedule)
 
