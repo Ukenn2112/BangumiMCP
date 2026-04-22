@@ -1,12 +1,35 @@
 """HTTP client utilities for Bangumi API."""
 import asyncio
 import json
-import os
 from typing import Any, Dict, Optional
+from urllib.parse import urlencode
 
 import httpx
 
-from ..config import BANGUMI_API_BASE, USER_AGENT
+from config import BANGUMI_API_BASE, USER_AGENT
+from utils.request_auth import get_effective_bangumi_token
+
+try:
+    from pyodide.ffi import to_js as _to_js
+    from js import Object as JSObject
+    from js import fetch as worker_fetch
+except ImportError:  # pragma: no cover - local stdio fallback
+    _to_js = None
+    JSObject = None
+    worker_fetch = None
+
+
+def _to_worker_js(value):
+    if _to_js is None or JSObject is None:
+        raise RuntimeError("Worker fetch bridge is unavailable.")
+    return _to_js(value, dict_converter=JSObject.fromEntries)
+
+
+def _build_request_url(path: str, query_params: Optional[Dict[str, Any]] = None) -> str:
+    if not query_params:
+        return f"{BANGUMI_API_BASE}{path}"
+
+    return f"{BANGUMI_API_BASE}{path}?{urlencode(query_params, doseq=True)}"
 
 # HTTP client timeout in seconds
 HTTP_CLIENT_TIMEOUT = 30.0
@@ -32,17 +55,20 @@ async def _ensure_lock():
 async def get_http_client() -> httpx.AsyncClient:
     """
     Get or create the shared HTTP client.
-    
+
     Uses an asyncio.Lock for async-safe singleton pattern with connection pooling.
     The timeout applies to all requests made with this client.
     """
     global _client
-    
+
     await _ensure_lock()
-    
+
     async with _client_lock:
         if _client is None:
-            _client = httpx.AsyncClient(follow_redirects=False, timeout=HTTP_CLIENT_TIMEOUT)
+            _client = httpx.AsyncClient(
+                follow_redirects=False,
+                timeout=HTTP_CLIENT_TIMEOUT,
+            )
     return _client
 
 
@@ -75,12 +101,21 @@ async def make_bangumi_request(
     request_headers["User-Agent"] = USER_AGENT
     request_headers["Accept"] = "application/json"
 
-    # Dynamically get token from environment to avoid stale imports
-    bangumi_token = os.getenv("BANGUMI_TOKEN")
+    # Prefer the request-scoped token, then fall back to the local env token.
+    bangumi_token = get_effective_bangumi_token()
     if bangumi_token:
         request_headers["Authorization"] = f"Bearer {bangumi_token}"
 
-    url = f"{BANGUMI_API_BASE}{path}"
+    if worker_fetch is not None:
+        return await _make_bangumi_request_with_fetch(
+            method=method,
+            path=path,
+            query_params=query_params,
+            json_body=json_body,
+            request_headers=request_headers,
+        )
+
+    url = _build_request_url(path, query_params)
 
     client = await get_http_client()
     try:
@@ -137,11 +172,85 @@ async def make_bangumi_request(
                 "details": e.response.text,
             }
     except httpx.RequestError as e:
-        error_msg = f"An error occurred while requesting {e.request.url!r}: {e}"
+        error_msg = (
+            f"An error occurred while requesting {e.request.url!r}: "
+            f"{type(e).__name__}: {e!r}"
+        )
         return {"error": error_msg}
     except Exception as e:
-        error_msg = f"An unexpected error occurred: {e}"
+        error_msg = f"An unexpected error occurred: {type(e).__name__}: {e!r}"
         return {"error": error_msg}
+
+
+async def _make_bangumi_request_with_fetch(
+    method: str,
+    path: str,
+    query_params: Optional[Dict[str, Any]],
+    json_body: Optional[Dict[str, Any]],
+    request_headers: Dict[str, str],
+) -> Any:
+    request_init: Dict[str, Any] = {
+        "method": method,
+        "headers": request_headers,
+        "redirect": "manual",
+    }
+    if json_body is not None:
+        request_headers["Content-Type"] = "application/json"
+        request_init["body"] = json.dumps(json_body)
+
+    response = await worker_fetch(
+        _build_request_url(path, query_params),
+        _to_worker_js(request_init),
+    )
+
+    status = response.status
+
+    if status in (301, 302, 303, 307, 308):
+        location = response.headers.get("Location")
+        if location:
+            return {"Location": location}
+        return {
+            "error": f"{status} redirect without Location",
+            "status_code": status,
+        }
+
+    if 300 <= status < 400:
+        return {
+            "error": f"Unexpected redirect status: {status}",
+            "status_code": status,
+        }
+
+    if status == 204:
+        return None
+
+    content_type = response.headers.get("Content-Type", "")
+    response_text = await response.text()
+
+    if status >= 400:
+        details: Any = response_text
+        if response_text:
+            try:
+                details = json.loads(response_text)
+            except json.JSONDecodeError:
+                details = response_text
+
+        error_msg = f"HTTP error occurred: {status} - {response_text}"
+        return {
+            "error": error_msg,
+            "status_code": status,
+            "details": details,
+        }
+
+    if not response_text:
+        return None
+
+    if "json" in content_type.lower():
+        return json.loads(response_text)
+
+    try:
+        return json.loads(response_text)
+    except json.JSONDecodeError:
+        return response_text
 
 
 def handle_api_error_response(response: Any) -> Optional[str]:

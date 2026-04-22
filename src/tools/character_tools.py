@@ -1,10 +1,10 @@
 """Character-related tools."""
-import os
 from typing import Optional
 
-from ..enums import CharacterType, SubjectType, PersonType, BloodType
-from ..utils.api_client import make_bangumi_request, handle_api_error_response
-from ..utils.formatters import format_character_summary
+from enums import CharacterType, SubjectType, PersonType, BloodType
+from utils.api_client import make_bangumi_request, handle_api_error_response
+from utils.formatters import format_character_summary
+from utils.request_auth import has_effective_bangumi_token
 
 
 def register(mcp):
@@ -279,7 +279,7 @@ def register(mcp):
         Returns:
             Success message or error.
         """
-        if not os.getenv("BANGUMI_TOKEN"):
+        if not has_effective_bangumi_token():
             return "BANGUMI_TOKEN is required for this operation."
 
         response = await make_bangumi_request(
@@ -306,7 +306,7 @@ def register(mcp):
         Returns:
             Success message or error.
         """
-        if not os.getenv("BANGUMI_TOKEN"):
+        if not has_effective_bangumi_token():
             return "BANGUMI_TOKEN is required for this operation."
 
         response = await make_bangumi_request(

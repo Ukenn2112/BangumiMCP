@@ -1,9 +1,9 @@
 """Collection management tools."""
-import os
 from typing import Any, Dict, List, Optional
 
-from ..enums import SubjectType, CollectionType, EpisodeCollectionType, EpType
-from ..utils.api_client import make_bangumi_request, handle_api_error_response
+from enums import SubjectType, CollectionType, EpisodeCollectionType, EpType
+from utils.api_client import make_bangumi_request, handle_api_error_response
+from utils.request_auth import has_effective_bangumi_token
 
 
 def _format_episode_collection_status(status_value: Optional[int]) -> str:
@@ -158,7 +158,7 @@ def register(mcp):
         Returns:
             Success message or error.
         """
-        if not os.getenv("BANGUMI_TOKEN"):
+        if not has_effective_bangumi_token():
             return "BANGUMI_TOKEN is required for this operation."
 
         json_body: Dict[str, Any] = {}
@@ -207,7 +207,7 @@ def register(mcp):
         Returns:
             Episode collection details or error.
         """
-        if not os.getenv("BANGUMI_TOKEN"):
+        if not has_effective_bangumi_token():
             return "BANGUMI_TOKEN is required for this operation."
 
         query_params: Dict[str, Any] = {"limit": min(limit, 1000), "offset": offset}
@@ -278,7 +278,7 @@ def register(mcp):
         Returns:
             Success message or error.
         """
-        if not os.getenv("BANGUMI_TOKEN"):
+        if not has_effective_bangumi_token():
             return "BANGUMI_TOKEN is required for this operation."
 
         if not episode_ids:
@@ -312,7 +312,7 @@ def register(mcp):
         Returns:
             Episode collection status or error.
         """
-        if not os.getenv("BANGUMI_TOKEN"):
+        if not has_effective_bangumi_token():
             return "BANGUMI_TOKEN is required for this operation."
 
         response = await make_bangumi_request(
@@ -348,7 +348,7 @@ def register(mcp):
         Returns:
             Success message or error.
         """
-        if not os.getenv("BANGUMI_TOKEN"):
+        if not has_effective_bangumi_token():
             return "BANGUMI_TOKEN is required for this operation."
 
         json_body = {"type": int(collection_type)}

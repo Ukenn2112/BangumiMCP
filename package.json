@@ -1,0 +1,16 @@
+{
+  "name": "bangumi-mcp",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Bangumi MCP Python Worker",
+  "scripts": {
+    "postinstall": "python scripts/sync_python_modules.py",
+    "sync": "python scripts/sync_python_modules.py",
+    "build": "npm run sync",
+    "dev": "npm run sync && npx wrangler dev",
+    "deploy": "npm run sync && npx wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.83.0"
+  }
+}

@@ -2,44 +2,20 @@
 import asyncio
 import atexit
 import os
+import sys
+from pathlib import Path
 
 from dotenv import load_dotenv
-from mcp.server.fastmcp import FastMCP
+
+# Make the src/ directory importable as top-level modules for local stdio runs.
+SRC_DIR = Path(__file__).resolve().parent / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
 # Load environment variables from .env file
 load_dotenv()
-
-# Initialize FastMCP server
-mcp = FastMCP("bangumi-tv")
-
-# Import and register all components
-from src.resources import openapi_resource
-from src.tools import (
-    subject_tools,
-    character_tools,
-    person_tools,
-    user_tools,
-    collection_tools,
-    revision_tools,
-    index_tools,
-)
-from src.prompts import workflow_prompts
-from src.utils.api_client import close_http_client
-
-# Register resources
-openapi_resource.register(mcp)
-
-# Register tools (55 total)
-subject_tools.register(mcp)
-character_tools.register(mcp)
-person_tools.register(mcp)
-user_tools.register(mcp)
-collection_tools.register(mcp)
-revision_tools.register(mcp)
-index_tools.register(mcp)
-
-# Register prompts
-workflow_prompts.register(mcp)
+from server import get_mcp
+from utils.api_client import close_http_client
 
 
 def cleanup():
@@ -68,4 +44,4 @@ atexit.register(cleanup)
 
 if __name__ == "__main__":
     transport = os.getenv("MCP_TRANSPORT", "stdio")
-    mcp.run(transport=transport)
+    get_mcp().run(transport=transport)

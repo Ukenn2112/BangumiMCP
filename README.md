@@ -62,12 +62,25 @@ Add to your `claude_desktop_config.json`:
 }
 ```
 
-**Note**: `BANGUMI_TOKEN` is optional but required for:
+**Note**: `BANGUMI_TOKEN` is only used for the local stdio mode, and is required for:
 - Authenticated operations (collections, personal data)
 - R18 content access
 - Write operations (create, update, delete)
 
 Get your token at: https://next.bgm.tv/demo/access-token
+
+### Cloudflare Python Worker (Public MCP)
+
+Use `wrangler.jsonc` and `src/worker.py` to deploy a public MCP endpoint on Cloudflare Python Workers.
+
+- MCP endpoint: `/mcp`
+- Send `Authorization: Bearer <your Bangumi access token>` on every request
+- The worker is stateless and does not store user tokens
+- `python_modules/` is generated automatically by `npm install` / Cloudflare build via `postinstall`
+- Keep local stdio by running `uv run main.py`
+- Sync vendored Python deps with `npm run sync`
+- Start local Worker dev with `npm run dev` (syncs `python_modules/` and then runs `wrangler dev`)
+- Deploy with `npm run deploy` (syncs `python_modules/` and then runs `wrangler deploy`)
 
 ### Project Architecture
 
@@ -76,12 +89,15 @@ BangumiMCP follows a modular architecture designed for maintainability and scala
 ```
 BangumiMCP/
 ├── main.py                           # Server initialization (44 lines)
+├── wrangler.jsonc                    # Cloudflare Python Worker config
 ├── src/
 │   ├── config.py                     # Configuration constants
 │   ├── enums.py                      # API enum definitions (8 types)
 │   ├── utils/
+│   │   ├── request_auth.py           # Request-scoped auth helpers
 │   │   ├── api_client.py             # HTTP client & error handling
 │   │   └── formatters.py             # Data formatting utilities
+│   ├── worker.py                     # Cloudflare Worker entrypoint
 │   ├── resources/
 │   │   └── openapi_resource.py       # OpenAPI specification resource
 │   ├── tools/                        # 55 MCP tools organized by domain
@@ -221,7 +237,7 @@ uv run main.py
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `BANGUMI_TOKEN` | No | Bangumi Access Token for authenticated operations and R18 content |
+| `BANGUMI_TOKEN` | No | Local stdio fallback Bangumi Access Token for authenticated operations and R18 content |
 
 ### License
 
@@ -295,12 +311,22 @@ uv pip install -e .
 }
 ```
 
-**注意**：`BANGUMI_TOKEN` 是可选的，但以下操作需要：
+**注意**：`BANGUMI_TOKEN` 只用于本地 stdio 模式，但以下操作需要：
 - 认证操作（收藏、个人数据）
 - 访问 R18 内容
 - 写操作（创建、更新、删除）
 
 获取令牌：https://next.bgm.tv/demo/access-token
+
+### Cloudflare Python Worker（公开 MCP）
+
+使用 `wrangler.jsonc` 和 `src/worker.py` 可以把服务部署成 Cloudflare Python Workers 上的公开 MCP 端点。
+
+- MCP 端点：`/mcp`
+- 每次请求都带上 `Authorization: Bearer <你的 Bangumi 令牌>`
+- Worker 是无状态的，不保存用户 token
+- 本地 stdio 继续使用 `uv run main.py`
+- 本地 Worker 开发可用 `uvx --from workers-py pywrangler dev`
 
 ### 项目架构
 
@@ -309,12 +335,15 @@ BangumiMCP 采用模块化架构，便于维护和扩展：
 ```
 BangumiMCP/
 ├── main.py                           # 服务器初始化（44 行）
+├── wrangler.jsonc                    # Cloudflare Python Worker 配置
 ├── src/
 │   ├── config.py                     # 配置常量
 │   ├── enums.py                      # API 枚举定义（8 种类型）
 │   ├── utils/
+│   │   ├── request_auth.py           # 请求级认证辅助
 │   │   ├── api_client.py             # HTTP 客户端和错误处理
 │   │   └── formatters.py             # 数据格式化工具
+│   ├── worker.py                     # Cloudflare Worker 入口
 │   ├── resources/
 │   │   └── openapi_resource.py       # OpenAPI 规范资源
 │   ├── tools/                        # 55 个 MCP 工具，按领域组织
@@ -454,7 +483,7 @@ uv run main.py
 
 | 变量 | 必填 | 说明 |
 |------|------|------|
-| `BANGUMI_TOKEN` | 否 | Bangumi 访问令牌，用于认证操作和访问 R18 内容 |
+| `BANGUMI_TOKEN` | 否 | 本地 stdio 兜底用的 Bangumi 访问令牌，用于认证操作和访问 R18 内容 |
 
 ### 许可证
 

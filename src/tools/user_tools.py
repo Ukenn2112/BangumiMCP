@@ -1,7 +1,7 @@
 """User-related tools."""
-import os
 
-from ..utils.api_client import make_bangumi_request, handle_api_error_response
+from utils.api_client import make_bangumi_request, handle_api_error_response
+from utils.request_auth import has_effective_bangumi_token
 
 
 def register(mcp):
@@ -81,7 +81,7 @@ def register(mcp):
         Returns:
             Current user info or error.
         """
-        if not os.getenv("BANGUMI_TOKEN"):
+        if not has_effective_bangumi_token():
             return "BANGUMI_TOKEN is required for this operation."
 
         response = await make_bangumi_request(method="GET", path="/v0/me")

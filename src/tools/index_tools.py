@@ -1,9 +1,9 @@
 """Index management tools."""
-import os
 from typing import Any, Dict, Optional
 
-from ..enums import SubjectType
-from ..utils.api_client import make_bangumi_request, handle_api_error_response
+from enums import SubjectType
+from utils.api_client import make_bangumi_request, handle_api_error_response
+from utils.request_auth import has_effective_bangumi_token
 
 
 def register(mcp):
@@ -32,7 +32,7 @@ async def create_index(title: str, description: str) -> str:
     Returns:
         Index ID or error.
     """
-    if not os.getenv("BANGUMI_TOKEN"):
+    if not has_effective_bangumi_token():
         return "BANGUMI_TOKEN is required for this operation."
 
     json_body = {
@@ -103,7 +103,7 @@ async def update_index(
     Returns:
         Success message or error.
     """
-    if not os.getenv("BANGUMI_TOKEN"):
+    if not has_effective_bangumi_token():
         return "BANGUMI_TOKEN is required for this operation."
 
     json_body = {
@@ -189,7 +189,7 @@ async def add_subject_to_index(
     Returns:
         Success message or error.
     """
-    if not os.getenv("BANGUMI_TOKEN"):
+    if not has_effective_bangumi_token():
         return "BANGUMI_TOKEN is required for this operation."
 
     json_body: Dict[str, Any] = {"subject_id": subject_id}
@@ -223,7 +223,7 @@ async def update_index_subject(
     Returns:
         Success message or error.
     """
-    if not os.getenv("BANGUMI_TOKEN"):
+    if not has_effective_bangumi_token():
         return "BANGUMI_TOKEN is required for this operation."
 
     json_body: Dict[str, Any] = {}
@@ -261,7 +261,7 @@ async def remove_subject_from_index(
     Returns:
         Success message or error.
     """
-    if not os.getenv("BANGUMI_TOKEN"):
+    if not has_effective_bangumi_token():
         return "BANGUMI_TOKEN is required for this operation."
 
     response = await make_bangumi_request(
@@ -287,7 +287,7 @@ async def collect_index(index_id: int) -> str:
     Returns:
         Success message or error.
     """
-    if not os.getenv("BANGUMI_TOKEN"):
+    if not has_effective_bangumi_token():
         return "BANGUMI_TOKEN is required for this operation."
 
     response = await make_bangumi_request(
@@ -313,7 +313,7 @@ async def uncollect_index(index_id: int) -> str:
     Returns:
         Success message or error.
     """
-    if not os.getenv("BANGUMI_TOKEN"):
+    if not has_effective_bangumi_token():
         return "BANGUMI_TOKEN is required for this operation."
 
     response = await make_bangumi_request(

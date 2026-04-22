@@ -1,7 +1,7 @@
 """Formatting utilities for Bangumi data structures."""
 from typing import Any, Dict
 
-from ..enums import SubjectType, CharacterType, PersonType
+from enums import SubjectType, CharacterType, PersonType
 
 
 def format_subject_summary(subject: Dict[str, Any]) -> str:

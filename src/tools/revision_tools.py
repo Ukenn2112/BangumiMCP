@@ -2,7 +2,7 @@
 import json
 from typing import Any, Dict
 
-from ..utils.api_client import make_bangumi_request, handle_api_error_response
+from utils.api_client import make_bangumi_request, handle_api_error_response
 
 
 def register(mcp):

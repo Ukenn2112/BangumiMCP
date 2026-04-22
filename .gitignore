@@ -8,3 +8,8 @@ wheels/
 
 # Virtual environments
 .venv
+.venv-workers/
+
+# Vendored Python Worker deps
+python_modules/
+.wrangler/
