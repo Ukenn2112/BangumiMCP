@@ -227,6 +227,10 @@ uv run main.py
 
 This project is built on the Bangumi API documentation and follows its terms of service.
 
+### Related Projects
+
+- **[BangumiMCP-ts](https://github.com/Tokisaki-Galaxy/BangumiMCP-ts)** - TypeScript version of BangumiMCP
+
 ### Contributing
 
 Contributions are welcome! Please feel free to submit issues or pull requests.
@@ -455,6 +459,10 @@ uv run main.py
 ### 许可证
 
 此项目基于 Bangumi API 文档构建，并遵循其服务条款。
+
+### 相关项目
+
+- **[BangumiMCP-ts](https://github.com/Tokisaki-Galaxy/BangumiMCP-ts)** - BangumiMCP 的 TypeScript 版本
 
 ### 贡献
 
