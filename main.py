@@ -4,13 +4,13 @@ import atexit
 import os
 
 from dotenv import load_dotenv
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 # Load environment variables from .env file
 load_dotenv()
 
-# Initialize FastMCP server
-mcp = FastMCP("bangumi-tv")
+# Initialize MCPServer
+mcp = MCPServer("bangumi-tv")
 
 # Import and register all components
 from src.resources import openapi_resource
