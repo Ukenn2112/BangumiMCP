@@ -9,7 +9,7 @@ from mcp.server.mcpserver import MCPServer
 # Load environment variables from .env file
 load_dotenv()
 
-# Initialize FastMCP server
+# Initialize MCPServer
 mcp = MCPServer("bangumi-tv")
 
 # Import and register all components
